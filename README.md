@@ -1,16 +1,79 @@
 # flutter_http
 
-A new Flutter project.
+A Simple http request example with Future, json decode, async/await and FutureBuilder widget
 
-## Getting Started
+## Packages used
+- Dart Async (For working with Future objects using async/await)
+- Dart Convert (For JSON parsing)
+- http (For HTTP requests)
 
-This project is a starting point for a Flutter application.
+## Example Code
 
-A few resources to get you started if this is your first Flutter project:
+```dart
+import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
-- [Lab: Write your first Flutter app](https://flutter.io/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.io/docs/cookbook)
+void main() async {
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.io/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+  runApp(
+    MaterialApp(
+      theme: ThemeData(
+        primaryColor: Colors.red
+      ),
+      home: Scaffold(
+        appBar: AppBar(title: Text("JSON"),centerTitle: true,),
+        body: HomePage(),
+      ),
+    )
+  );
+}
+
+
+class HomePage extends StatelessWidget {
+  
+  Future<List> getPosts() async {
+    http.Response response = await http.get("https://jsonplaceholder.typicode.com/posts");
+    return json.decode(response.body);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: FutureBuilder(
+        future: getPosts(),
+        builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot){
+          if(snapshot.hasData){
+            final List<dynamic> data = snapshot.data;
+            return ListView.builder(
+              itemCount: snapshot.data.length,
+              itemBuilder: (BuildContext context, int index){
+                final item = data[index];
+                return Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                  child: ListTile(
+                    title: Text(item["title"], style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.w600
+                    )),
+                    subtitle: Text(item["body"], style: TextStyle(
+                      fontSize: 16.0
+                    ),),
+                  ),
+                );
+              },
+
+            );
+          }else{
+            return Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
+    );
+  }
+}
+
+
+```
