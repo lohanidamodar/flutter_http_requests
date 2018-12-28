@@ -1,62 +1,63 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
-void main() => runApp(MyApp());
+void main() async {
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
+  runApp(
+    MaterialApp(
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primaryColor: Colors.red
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
+      home: Scaffold(
+        appBar: AppBar(title: Text("JSON"),centerTitle: true,),
+        body: HomePage(),
+      ),
+    )
+  );
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
 
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+class HomePage extends StatelessWidget {
+  
+  Future<List> getPosts() async {
+    http.Response response = await http.get("https://jsonplaceholder.typicode.com/posts");
+    return json.decode(response.body);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
+    return Container(
+      child: FutureBuilder(
+        future: getPosts(),
+        builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot){
+          if(snapshot.hasData){
+            final List<dynamic> data = snapshot.data;
+            return ListView.builder(
+              itemCount: snapshot.data.length,
+              itemBuilder: (BuildContext context, int index){
+                final item = data[index];
+                return Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                  child: ListTile(
+                    title: Text(item["title"], style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.w600
+                    )),
+                    subtitle: Text(item["body"], style: TextStyle(
+                      fontSize: 16.0
+                    ),),
+                  ),
+                );
+              },
+
+            );
+          }else{
+            return Center(child: CircularProgressIndicator());
+          }
+        },
       ),
     );
   }
